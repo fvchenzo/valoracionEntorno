@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validando Entornos</title>
+    <!--Import Google Icon Font-->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!--Import materialize.css-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+    <!--Let browser know website is optimized for mobile-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="./styles.css">
+
+    
+</head>
+<body>
+
+  <main>
+    
+    <div id="app">
+      <nav>
+        <div class="nav-wrapper">
+          <a href="#" class="brand-logo logo">ChenzoAP</a>
+        </div>
+      </nav>
+      <div class="row">
+        <div class="description">
+          <h3>Herramienta de valoración de entorno</h3>
+          <p>Del libro <span class="bookName"><a href="https://a.co/d/h9GE38w" target="_blank">Forex Trading: Puesto en práctica de Juan José Nogales</a></span> donde se explica el método de las 4M y se pone en práctica junto con esta herramienta.</p>
+          <p><span class="subtitle">Objetivo: </span>Evaluar el entorno de manera subjetiva y así confirmar si el trade que nos proponemos a realizar se encuentra en un entorno favorable.</p>
+          <p><span class="subtitle">Descripción: </span>
+            La tendencia se califica en 7 niveles: bajista, alcista, neutro o consolidación y los intermedio y 3 timefrimes diferentes donde el principal para nuestro ejemplo es el H4 
+            y los otros son el posterior e inferior inmediato: D1 y H1 (según el autor esta herramienta aplica para cualquier timefrime pero siempre siguiendo esta regla) 
+            donde cada uno tiene un peso respectivamente.
+          </p>
+            
+          <p><span class="subtitle">Como Funciona: </span>Por nuestra parte para utilizar esta herramienta colocaremos una X en la valoración que toque por cada timefrime, al hacer click 
+            en "Calcular puntuación" obtendremos un resultado que se verá al lado de "Puntuacion". Este será interpretado según la tabla de valoraciones que se ve en el cuadro celeste
+            y el resultado se mostrara en el cuadro turquesa</p>
+          <p><span class="advertencia">Alerta</span> Solo colocar una X por cada Timefrime</p>
+        </div>
+      </div>
+      <div class="validEnvi row">
+        <div class="toolEnvi col m12 l8 z-depth-2">
+          <table class="responsive-table">
+            <thead>
+              <tr>
+                  <th colspan="2"><h5>Valoracion de entornos</h5></th>
+                  <th>H1</th>
+                  <th>H4</th>
+                  <th>D1</th>
+              </tr>
+            </thead>
+    
+            <tbody>
+              <tr>
+                <td class="subtitle"><span class="">Puntuacion: </span></td>
+                <td class="resultEnvi">{{ new Intl.NumberFormat("en-EN", { maximumFractionDigits: 1}).format(resultScore) }}</td>
+                <td>28%</td>
+                <td>32%</td>
+                <td>40%</td>
+              </tr>
+  
+              <tr v-for="(envi, index) in enviroments" :key="index">
+                <td class="tendency">{{ envi.name }}</td>
+                <td> {{ envi.charge * 100 }}%</td>
+                <td><input :name="'listh1'+index" class="checkTendency" type="text" value=""></td> 
+                <td><input :name="'listh4'+index" class="checkTendency" type="text" value=""></td>
+                <td><input :name="'listd1'+index" class="checkTendency" type="text" value=""></td>
+              </tr>
+              
+            </tbody>
+          </table>
+          
+          
+        </div>
+  
+        
+        <div class="col s4 ">
+          <div>
+            <h4 class="resultEnvi">
+              {{ resultText }}
+            </h4>
+          </div>
+          <div class="legend">
+            <p>Entorno alcista fuerte >= 0,5</p>
+            <p>Entorno alcista debil >= 0,3 y <=4 </p>
+            <p>Entorno neutro < 0,3 y > -0,3 </p>
+            <p>Entorno alcista debil <= -0,3 y >=4 </p>
+            <p>Entorno alcista fuerte <= -0,5</p>
+          </div>
+          <a class="waves-effect waves-light btn-small" @click="getValueByName()" style="background-color: red;">Calcular Puntuacion</a>
+        </div>
+        
+      </div>
+  
+    </div>
+  </main>
+  
+  <footer class="page-footer">
+      <div class="container copyr">
+      © 2014 chenzoap
+      </div>
+  </footer>
+  <!-- Compiled and minified JavaScript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script>
+    const { createApp, ref, toRefs, computed, reactive, onMounted } = Vue
+
+    createApp({
+      setup() {
+        const vfH1 = 0.28
+        const vfH4 = 0.32
+        const vfD1 = 0.40
+
+        const vtfH1 = ref(0)
+        const vtfH4 = ref(0)
+        const vtfD1 = ref(0)
+
+        const enviromentsState = reactive({
+          enviroments: [
+            { name: "Claramente alcista", charge: 1, valorInpH1: "", valorInpH4: "", valorInpD1: "" },
+            { name: "Fuerte alcista", charge: 0.66, valorInpH1: "", valorInpH4: "", valorInpD1: "" },
+            { name: "Neutro con sesgo alcista", charge: 0.33, valorInpH1: "", valorInpH4: "1", valorInpD1: "" },
+            { name: "Neutro", charge: 0, valorInpH1: "1", valorInpH4: "", valorInpD1: "" },
+            { name: "Neutro con sesgo bajista", charge: -0.33, valorInpH1: "", valorInpH4: "1", valorInpD1: "" },
+            { name: "Fuerte bajista", charge: -0.66, valorInpH1: "", valorInpH4: "", valorInpD1: "" },
+            { name: "Claramente bajista", charge: -1, valorInpH1: "", valorInpH4: "", valorInpD1: "" }
+          ],
+          
+        })
+
+        function getValueByName() {
+          for (let i=0; i<7; i++) {
+            const getValor = document.getElementsByName("listh1"+i)
+            //console.log(getValor)
+            if (getValor[0].value == "x") {
+              //console.log("h1"+enviromentsState.enviroments[i].charge)
+              vtfH1.value = enviromentsState.enviroments[i].charge
+            }
+          }
+          for (let i=0; i<7; i++) {
+            const getValor2 = document.getElementsByName("listh4"+i)
+            if (getValor2[0].value == "x") {
+              vtfH4.value = enviromentsState.enviroments[i].charge
+            }
+          }
+          for (let i=0; i<7; i++) {
+            const getValor3 = document.getElementsByName("listd1"+i)
+            if (getValor3[0].value == "x") {
+              vtfD1.value = enviromentsState.enviroments[i].charge
+            }
+          }
+          
+          clearIpt()
+        }
+
+        function clearIpt() {
+          for (let i=0; i<7; i++) {
+            const getValor = document.getElementsByName("listh1"+i)
+            const getValor2 = document.getElementsByName("listh4"+i)
+            const getValor3 = document.getElementsByName("listd1"+i)
+            if(getValor[0].value = "x"){
+              getValor[0].value = ""
+            }
+            if(getValor2[0].value = "x"){
+              getValor2[0].value = ""
+            }
+            if(getValor3[0].value = "x"){
+              getValor3[0].value = ""
+            }
+          }
+          console.log("funcion limpiar")
+        }
+
+        const resultScore = computed(() => {
+          return vtfH1.value*vfH1 + vtfH4.value*vfH4 + vtfD1.value*vfD1
+        })
+
+
+        const resultText = computed(() => {
+          /* console.log(resultScore.value) */
+          if (resultScore.value >= 0.5) {
+            return "Entorno alcista fuerte"
+          } else if (resultScore.value >= 0.3 && resultScore.value <= 0.4) {
+            return "Entorno alcista debil"
+          } else if (resultScore.value < 0.3 && resultScore.value > -0.4) {
+            return "Entorno neutro"
+          } else if (resultScore.value <= -0.3 && resultScore.value >= -0.4) {
+            return "Entorno bajista debil"
+          } else if (resultScore.value <= -0.5) {
+            return "Entorno bajista fuerte"
+          } else {
+            return "Coloque una X para valorar el entorno en cada timeframe"
+          }
+        })
+
+        return {
+          ...toRefs(enviromentsState),
+          resultScore,
+          resultText,
+          getValueByName,
+          vtfH1,
+          vtfH4,
+          vtfD1,
+        }
+      }
+    }).mount('#app')
+  </script>
+</body>
+</html>
